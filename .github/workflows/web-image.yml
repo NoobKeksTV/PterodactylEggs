@@ -1,0 +1,59 @@
+name: Webserver-Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Variante
+        type: choice
+        default: alle
+        options: ['alle', 'php8.4', 'php8.3', 'php8.2', 'static']
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: web-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.variant == 'alle' && '["php8.4","php8.3","php8.2","static"]' || format('["{0}"]', inputs.variant)) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: PHP-Version bestimmen
+        id: php
+        run: |
+          variant='${{ matrix.variant }}'
+          if [ "$variant" = static ]; then echo "version=none" >> "$GITHUB_OUTPUT"; else echo "version=${variant#php}" >> "$GITHUB_OUTPUT"; fi
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "release=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: images/web
+          platforms: linux/amd64
+          build-args: PHP_VERSION=${{ steps.php.outputs.version }}
+          tags: ghcr.io/${{ steps.php.outputs.owner }}/egopvp-web:${{ matrix.variant }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.php.outputs.release }}
+          push: true
+          pull: true
+          no-cache: true
