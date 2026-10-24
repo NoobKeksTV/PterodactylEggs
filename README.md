@@ -28,7 +28,7 @@ Egg-Variablen aus der Umgebung. Im Serverordner (`/home/container`) liegen nur K
 
 Befehle über die Konsole (stdin): `reload` (neu erzeugen, mit `nginx -t` prüfen, ohne Neustart übernehmen),
 `deploy` (Git nach `webroot/`, `composer install`, `reload`), `status`, `stop`. Startmeldung:
-`Webserver laeuft auf Port <port>`.
+`Webserver running on port <port>`.
 
 Umgebungsvariablen: `SERVER_PORT`, `SERVER_MEMORY` (setzt Wings), `GIT_REPO`, `GIT_BRANCH`, `GIT_USERNAME`,
 `GIT_TOKEN`, `DEPLOY_ON_START`, `COMPOSER_INSTALL`, `DOC_ROOT`, `PHP_MEMORY_LIMIT`, `PHP_MAX_EXECUTION`,
